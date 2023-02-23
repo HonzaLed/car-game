@@ -28,12 +28,12 @@ def init_pygame():
 
 def spawn_initial_entities():
     global road, car, obstacles_group, plugins
-    road = entity.Road(WIDTH // 2, (HEIGHT // 2)-4, WIDTH, HEIGHT + 8)
-    car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT // 3), 72, 128)
+    road = entity.Road(WIDTH // 2, HEIGHT // 2, WIDTH, HEIGHT + 16) # spawn road
+    car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT // 3), 72, 128) # spawn car at the bottom center
 
     obstacles_group = pygame.sprite.Group()
-    obstacles_group.add(entity.Person(WIDTH//3*2, 1))
-    obstacles_group.add(entity.Person(WIDTH//3  , 1, value=50))
+    obstacles_group.add(entity.Person(WIDTH//3*2, 1)) # Spawn person on the 2/3 of width
+    obstacles_group.add(entity.Person(WIDTH//3  , 1, value=50)) # spawn person 1/3 width with 50 point value
     plugins.run_hook("on_init", obstacles_group)
 
 
@@ -58,38 +58,34 @@ async def main():
         # Draw loop
         screen.fill(BACKGROUND)
 
-        if frame % 10 == 0:
-            road.progress()
-            road.draw(screen)
+        if frame % 10 == 0: # once every 10 frames
+            road.progress() # scroll road
+            road.draw(screen) # we must render the road first otherwise everything will be "under" the road and we will see nothing
             for i in obstacles_group:
-                i.progress(8, car)
+                i.progress(8, car) # call progress on everything that is not car or road
             plugins.run_hook("on_progress", car)
         else:
             road.draw(screen)
             
-        obstacles_group.draw(screen)
+        obstacles_group.draw(screen) # draw the progressed obstacles
         car.draw(screen)
         car.update(WIDTH)
 
         score_text, rect = GAME_FONT.render("Score: "+str(car.score), (0, 0, 0))
-        screen.blit(score_text, (WIDTH*0.1, HEIGHT*0.95))
+        screen.blit(score_text, (WIDTH*0.1, HEIGHT*0.95)) # display score in the left bottom corner
+        
         plugins.run_hook("on_screen_draw", screen)
         pygame.display.flip()
         clock.tick(60)
 
-        # if pygame.sprite.spritecollideany(player, doors):
-        #     console.log("Touched, level completed!")
-        #     break_now = True
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                break_now = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     break_now = True
         if break_now:
             break
-        frame += 1
+        frame += 1 # increment the frame counter (we could use this to get FPS)
 
-
-asyncio.run(main())
+asyncio.run(main()) # run the main program as async task (we need this if we want to export to WebAssembly)
