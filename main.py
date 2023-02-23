@@ -15,7 +15,7 @@ BACKGROUND = (0, 0, 0)
 
 car = None
 road = None
-obtacles_group = None
+obstacles_group = None
 
 
 def init_pygame():
@@ -27,12 +27,14 @@ def init_pygame():
 
 
 def spawn_initial_entities():
-    global road, car, obtacles_group, plugins
-    road = entity.Road(WIDTH // 2, HEIGHT // 2, WIDTH, HEIGHT + 8)
+    global road, car, obstacles_group, plugins
+    road = entity.Road(WIDTH // 2, (HEIGHT // 2)-4, WIDTH, HEIGHT + 8)
     car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT // 3), 72, 128)
 
-    obtacles_group = pygame.sprite.Group()
-    plugins.run_hook("on_init", obtacles_group)
+    obstacles_group = pygame.sprite.Group()
+    obstacles_group.add(entity.Person(WIDTH//3*2, 1))
+    obstacles_group.add(entity.Person(WIDTH//3  , 1), value=50)
+    plugins.run_hook("on_init", obstacles_group)
 
 
 async def main():
@@ -59,15 +61,18 @@ async def main():
         if frame % 10 == 0:
             road.progress()
             road.draw(screen)
+            for i in obstacles_group:
+                i.progress(8, car)
             plugins.run_hook("on_progress", car)
         else:
             road.draw(screen)
-
+            
+        obstacles_group.draw(screen)
         car.draw(screen)
         car.update(WIDTH)
 
         score_text, rect = GAME_FONT.render("Score: "+str(car.score), (0, 0, 0))
-        screen.blit(score_text, (WIDTH*0.1, HEIGHT*0.9))
+        screen.blit(score_text, (WIDTH*0.1, HEIGHT*0.95))
         plugins.run_hook("on_screen_draw", screen)
         pygame.display.flip()
         clock.tick(60)

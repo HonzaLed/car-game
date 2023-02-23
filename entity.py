@@ -1,18 +1,15 @@
 import pygame
+import random
 import numpy
 
 
 def get_image_path(image):
     return "./assets/tiles/" + image
-
-
 def load_image(image, scalex, scaley):
     return pygame.transform.scale(pygame.image.load(get_image_path(image)),
                                   (scalex, scaley))
 
-
 class Sprite(pygame.sprite.Sprite):
-
     def __init__(self, image, startx, starty, scalex=70, scaley=70):
         super().__init__()
         self.scalex = scalex
@@ -32,9 +29,7 @@ class Sprite(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
-
 class Road(Sprite):
-
     def __init__(self, startx, starty, scalex=1080, scaley=1920):
         super().__init__("road.png", startx, starty, scalex, scaley)
         self.scrolled = False
@@ -49,19 +44,35 @@ class Road(Sprite):
     def move(self, x, y):  # move local (from current coords)
         self.rect.move_ip([x, y])
 
+class Person(Sprite):
+    def __init__(self, startx, starty, scalex=39, scaley=60, images=["person1.png"], value=1):
+        super().__init__(random.choice(images), startx, starty, scalex, scaley)
+        self.value = value
+    def progress(self, pixels, car):
+        if self.check_collision(0, pixels, car):
+            car.score += self.value
+            self.kill()
+            return
+        self.move(0,8)
+        
+    def move(self, x, y):  # move local (from current coords)
+        self.rect.move_ip([x, y])
+            
+    def check_collision(self, x, y, rect):
+        self.rect.move_ip([x, y])
+        collide = self.rect.colliderect(rect.rect)
+        self.rect.move_ip([-x, -y])
+        return collide
 
 class Car(Sprite):
-
     def __init__(self, startx, starty, scalex=70, scaley=70):
         super().__init__("car.png", startx, starty, scalex, scaley)
         self.still_image = self.image
+        self.speed = 4
         self.score = 0
 
         # self.left_image  = load_image("car_left.png",  self.scalex, self.scaley)
         # self.right_image = load_image("car_right.png", self.scalex, self.scaley)
-
-        self.speed = 4
-        # self.prev_key = pygame.key.get_pressed()
 
     def update(self, width):
         # check keys
@@ -94,7 +105,6 @@ class Car(Sprite):
 
 
 class Box(Sprite):
-
     def __init__(self, startx, starty, coords=False):
         if not coords:
             super().__init__("box.png", 35 + (70 * startx), 35 + (70 * starty))
