@@ -27,7 +27,7 @@ def init_pygame():
 def spawn_initial_entities():
     global road, car
     road = entity.Road(WIDTH//2, HEIGHT//2, WIDTH, HEIGHT)
-    car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT//3))
+    car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT//3), 72, 128)
 
     # boxes = pygame.sprite.Group()
     # for bx in range(35, WIDTH, 70):
@@ -59,8 +59,10 @@ async def main():
         # Draw loop
         screen.fill(BACKGROUND)
         
-        car.draw(screen)
         road.draw(screen)
+        
+        car.draw(screen)
+        car.update(WIDTH)
         plugins.run_hook("on_screen_draw", screen)
         pygame.display.flip()
         clock.tick(60)

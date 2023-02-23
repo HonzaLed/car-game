@@ -43,20 +43,22 @@ class Car(Sprite):
         self.speed = 4
         # self.prev_key = pygame.key.get_pressed()
 
-    def update(self, boxes):
+    def update(self, width):
         # check keys
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT]:
             #self.image = self.left_image
-            self.move(-self.speed, 0)
+            self.move(-self.speed, 0, width)
         elif key[pygame.K_RIGHT]:
             #self.image = self.right_image
-            self.move(self.speed, 0)
+            self.move(self.speed, 0, width)
         else:
             self.image = self.still_image
 
-    def move(self, x, y): # move local (from current coords)
-        self.rect.move_ip([x, y])
+    def move(self, x, y, width): # move local (from current coords)
+        globalx = self.rect.x + x
+        if (not globalx < 0) and (not globalx+self.rect[2]-1 > width):
+            self.rect.move_ip([x, y])
 
     def tp(self, x, y): # teleport (move global)
         self.rect.move([x, y])
