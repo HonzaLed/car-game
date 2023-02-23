@@ -33,7 +33,7 @@ def spawn_initial_entities():
 
     obstacles_group = pygame.sprite.Group()
     obstacles_group.add(entity.Person(WIDTH//3*2, 1))
-    obstacles_group.add(entity.Person(WIDTH//3  , 1), value=50)
+    obstacles_group.add(entity.Person(WIDTH//3  , 1, value=50))
     plugins.run_hook("on_init", obstacles_group)
 
 
