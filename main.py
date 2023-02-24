@@ -4,7 +4,6 @@ import console
 import entity
 
 import pygame, pygame.freetype
-import numpy
 
 aspect_ratio = [9, 16]
 
@@ -26,15 +25,15 @@ def init_pygame():
     clock = pygame.time.Clock()
 
 
-def spawn_initial_entities():
+async def spawn_initial_entities():
     global road, car, obstacles_group, plugins
     road = entity.Road(WIDTH // 2, HEIGHT // 2, WIDTH, HEIGHT + 16) # spawn road
-    car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT // 3), 72, 128) # spawn car at the bottom center
+    car = entity.Car(WIDTH // 2, HEIGHT - (HEIGHT // 3), 64, 96) # spawn car at the bottom center
 
     obstacles_group = pygame.sprite.Group()
     obstacles_group.add(entity.Person(WIDTH//3*2, 1)) # Spawn person on the 2/3 of width
     obstacles_group.add(entity.Person(WIDTH//3  , 1, value=50)) # spawn person 1/3 width with 50 point value
-    plugins.run_hook("on_init", obstacles_group)
+    await plugins.run_hook("on_init", obstacles_group)
 
 
 async def main():
@@ -48,7 +47,7 @@ async def main():
     plugins.enable_all((WIDTH, HEIGHT))  # plugins started
 
     init_pygame()
-    spawn_initial_entities()
+    await spawn_initial_entities()
     frame = 0
     while True:
         break_now = False
@@ -63,7 +62,7 @@ async def main():
             road.draw(screen) # we must render the road first otherwise everything will be "under" the road and we will see nothing
             for i in obstacles_group:
                 i.progress(8, car) # call progress on everything that is not car or road
-            plugins.run_hook("on_progress", car)
+            await plugins.run_hook("on_progress", car)
         else:
             road.draw(screen)
             
@@ -72,9 +71,9 @@ async def main():
         car.update(WIDTH)
 
         score_text, rect = GAME_FONT.render("Score: "+str(car.score), (0, 0, 0))
-        screen.blit(score_text, (WIDTH*0.1, HEIGHT*0.95)) # display score in the left bottom corner
+        screen.blit(score_text, (WIDTH*0.1, HEIGHT*0.05)) # display score in the left bottom corner
         
-        plugins.run_hook("on_screen_draw", screen)
+        await plugins.run_hook("on_screen_draw", screen)
         pygame.display.flip()
         clock.tick(60)
 

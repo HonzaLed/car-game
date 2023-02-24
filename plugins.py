@@ -1,8 +1,8 @@
 import importlib.util as imputils
+import asyncio
 import console
 import os.path as osp
 import yaml
-import sys
 import os
 
 class PluginTemplate:
@@ -60,13 +60,22 @@ class PluginManager:
         main_file = osp.join(path, config["entry"]["file"]) # get the plugin main code file
         spec = imputils.spec_from_file_location(mod_name, main_file) # do some magic (initialize something that points to the plugin code file?)
         module = imputils.module_from_spec(spec) # load module
-        spec.loader.exec_module(module) # initialize it
+        spec.loader.exec_module(module) # initialize (exec it, thus define the main class) it
         self.init_plugin(path, module, config) # run it, hook it, whatever
 
     def init_plugin(self, path, module, config):
-        main_class = config["entry"]["class"] # get the entry class name from plugin config
-        plugin = module.__getattribute__(main_class)(console, config["name"]) # get the class itself and execute it,
+        name = config["name"]
+        try:
+            main_class = config["entry"]["class"] # get the entry class name from plugin config
+        except:
+            console.error(f"Error loading plugin \"{name}\", the main class isn't defined in config, skipping loading!")
+            return
+        try:
+            plugin = module.__getattribute__(main_class)(console, name) # get the class itself and execute it,
                 # arguments are the console instance and plugin name(probably gona add some more stuff later (keypresses, etc.))
+        except AttributeError:
+            console.error(f"Error loading plugin \"{name}\", class \"{main_class}\" is not defined, skipping loading!")
+            return
         self.plugins.update({config["alias"]: [plugin, config]}) # append it to the plugin list
 
     def enable_all(self, *arg): # enable all plugins
@@ -85,25 +94,32 @@ class PluginManager:
             try:
                 i.disable(*arg) # enable them one by one
             except Exception as err: # if error
-                console.warn("Plugin", self.get_plugin_name_from_instance(i), "could'n be enabled properly, trying to stop normaly but data loss may occur!")
+                console.warn("Plugin", self.get_plugin_name_from_instance(i), "could'n be disabled properly, trying to stop normaly but data loss may occur!")
                 console.warn("Error:", err)
                 # inform the user and continue
                 # if the plugin is currently doing something and has some information loaded
-                #due to the plugin not being able to save the information
+                # due to the plugin not being able to save the information
     
     def register_hook(self, name):
-        if not name + "_list" in globals().keys():
-            globals().update({name+"_list": []})
+        if not name + "_list" in globals().keys(): # if list isn't already defined
+            globals().update({name+"_list": []}) # create list of functions
+        # make function from template
         template="""def {}(func):
                         {}.append(func)
                         return func""".format(name, name+"_list")
         exec(template, globals())
 
-    def run_hook(self, name, *args):
+    async def run_hook(self, name, *args):
         instances = self.get_all_plugin_instances()
         functions = globals()[name + "_list"]
-        for i in range(len(functions)):
-            functions[i](instances[i], *args)
+        
+        if len(instances)==0 or len(functions)==0:
+            return
+        
+        functions = [
+            functions[i](instances[i], *args) for i in range(len(functions))
+        ]
+        await asyncio.gather(*functions)
 
     def get_plugin(self, name):
         return self.plugins[name][0]

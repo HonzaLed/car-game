@@ -44,14 +44,16 @@ class Road(Sprite):
         self.rect.move_ip([x, y])
 
 class Person(Sprite):
-    def __init__(self, startx, starty, scalex=39, scaley=60, images=["person1.png"], value=1):
+    def __init__(self, startx, starty, scalex=39, scaley=60, images=["person1.png"], value=1, multiplier=1):
         super().__init__(random.choice(images), startx, starty, scalex, scaley)
         self.value = value # point value of this person
+        self.multiplier = multiplier
         
     def progress(self, pixels, car):
         self.move(0,8) # move down
         if self.check_collision(car): # if coolliding with the car, add score and kill self
             car.score += self.value
+            car.score *= self.multiplier
             self.kill()
             return
         

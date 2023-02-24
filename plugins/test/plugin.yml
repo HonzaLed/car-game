@@ -1,11 +1,10 @@
-name: "random world generator"
-alias: "random-generator"
+name: "Test2 plugin"
+descriptions: "Plugin to test plugins"
+alias: "test2"
 version: 1.0.0
 
 enabled: true
 
-descriptions: "Generates random map on game startup"
-
 entry:
   file: "entry.py"
-  class: "obstacles"
+  class: "test"

@@ -1,5 +1,6 @@
 { pkgs }: {
 	deps = [
+    pkgs.bind.dnsutils
     pkgs.unzip
     pkgs.python310Full
     pkgs.replitPackages.prybar-python310
